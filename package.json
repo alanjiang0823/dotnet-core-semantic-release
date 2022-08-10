@@ -1,0 +1,36 @@
+{
+  "name": "dotnet-core-semantic-release",
+  "version": "0.0.0-development",
+  "main": "index.js",
+  "repository": "git@github.com:kirkchen/dotnet-core-semantic-release.git",
+  "author": "Kirk Chen <rwk0119@yahoo.com.tw>",
+  "license": "MIT",
+  "private": true,
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "dist/**/*.{js,css}",
+            "docs",
+            "package.json"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ]
+    ]
+  },
+  "scripts": {
+    "semantic-release": "semantic-release"
+  },
+  "devDependencies": {
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^19.0.3"
+  }
+}
