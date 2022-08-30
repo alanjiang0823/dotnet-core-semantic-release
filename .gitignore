@@ -5,3 +5,5 @@ obj/
 tools/
 
 node_modules/
+
+package*.json
