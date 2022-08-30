@@ -1,6 +1,11 @@
 {
   "branches": [
-    "main"
+    "main",
+    {
+      "name": "feature/*",
+      "channel": "alpha",
+      "prerelease": "alpha"
+    }
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",

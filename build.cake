@@ -65,7 +65,7 @@ Task("Semantic")
     .Does(() =>
 {
     string[] semanticReleaseOutput;
-    Npx("semantic-release", args => args.Append("--dry-run"), requiredSemanticVersionPackages, out semanticReleaseOutput);
+    Npx("semantic-release", args => args.Append(""), requiredSemanticVersionPackages, out semanticReleaseOutput);
 
     Information(string.Join(Environment.NewLine, semanticReleaseOutput));
 
