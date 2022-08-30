@@ -3,13 +3,13 @@
 var target = Argument("target", "Semantic");
 var configuration = Argument("configuration", "Release");
 var releaseVersion = "0.0.0";
+var artifactsDir =  Directory("./artifacts");
 var changesDetectedSinceLastRelease = false;
 
 Action<NpxSettings> requiredSemanticVersionPackages = settings => settings
-    .AddPackage("semantic-release@13.1.1")
-    .AddPackage("@semantic-release/changelog@1.0.0")
-    .AddPackage("@semantic-release/git@3.0.0")
-    .AddPackage("@semantic-release/exec@2.0.0");
+    .AddPackage("@semantic-release/changelog")
+    .AddPackage("@semantic-release/git");
+    
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -19,17 +19,32 @@ Task("Clean")
     .WithCriteria(c => HasArgument("rebuild"))
     .Does(() =>
 {
-    CleanDirectory($"./SampleLibrary/bin/{configuration}");
+    CleanDirectories($"./**/bin/{configuration}");
+    CleanDirectory(artifactsDir);
 });
 
 Task("Build")
-    .IsDependentOn("Clean")
     .Does(() =>
 {
-    DotNetBuild("./dotnet-core-semantic-release.sln", new DotNetBuildSettings
+    var solutions = GetFiles("./**/*.sln");
+    foreach(var solution in solutions)
     {
-        Configuration = configuration,
-    });
+        Information("Building solution {0} v{1}", solution.GetFilenameWithoutExtension(), releaseVersion);
+
+        var assemblyVersion = $"{releaseVersion}.0";
+
+        DotNetCoreBuild(solution.FullPath, new DotNetCoreBuildSettings()
+        {
+            Configuration = configuration,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .WithProperty("Version", assemblyVersion)
+                .WithProperty("AssemblyVersion", assemblyVersion)
+                .WithProperty("FileVersion", assemblyVersion)
+                // 0 = use as many processes as there are available CPUs to build the project
+                // see: https://develop.cakebuild.net/api/Cake.Common.Tools.MSBuild/MSBuildSettings/60E763EA
+                .SetMaxCpuCount(0)
+        });
+    }
 });
 
 Task("Test")
@@ -50,7 +65,7 @@ Task("Semantic")
     .Does(() =>
 {
     string[] semanticReleaseOutput;
-    Npx("semantic-release", "--dry-run", requiredSemanticVersionPackages, out semanticReleaseOutput);
+    Npx("semantic-release", args => args.Append("--dry-run"), requiredSemanticVersionPackages, out semanticReleaseOutput);
 
     Information(string.Join(Environment.NewLine, semanticReleaseOutput));
 
@@ -62,6 +77,31 @@ Task("Semantic")
         Information("Next semantic version number is {0}", nextSemanticVersionNumber);
         releaseVersion = nextSemanticVersionNumber;
         changesDetectedSinceLastRelease = true;
+    }
+});
+
+Task("Package")
+    .Does(() =>
+{
+    var projects = GetFiles("./**/*.csproj");
+    foreach(var project in projects)
+    {
+        var projectDirectory = project.GetDirectory().FullPath;
+        if(projectDirectory.EndsWith("Tests")) continue;
+
+        Information("Packaging project {0} v{1}", project.GetFilenameWithoutExtension(), releaseVersion);
+
+        var assemblyVersion = $"{releaseVersion}.0";
+
+        DotNetCorePack(project.FullPath, new DotNetCorePackSettings {
+            Configuration = configuration,
+            OutputDirectory = artifactsDir,
+            NoBuild = true,
+            MSBuildSettings = new DotNetCoreMSBuildSettings()
+                .WithProperty("Version", assemblyVersion)
+                .WithProperty("AssemblyVersion", assemblyVersion)
+                .WithProperty("FileVersion", assemblyVersion)
+        });
     }
 });
 
