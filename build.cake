@@ -32,6 +32,20 @@ Task("Build")
     });
 });
 
+Task("Test")
+    .Does(() =>
+{
+    var xunitArgs = "--no-build --configuration " + configuration;
+
+    var testProjects = GetFiles("./**/*.Tests.csproj");
+    foreach(var testProject in testProjects)
+    {
+        Information("Testing project {0} with args {1}", testProject.GetFilenameWithoutExtension(), xunitArgs);
+
+        DotNetTool(testProject.FullPath, "test", xunitArgs);
+    }
+});
+
 Task("Semantic")
     .Does(() =>
 {
