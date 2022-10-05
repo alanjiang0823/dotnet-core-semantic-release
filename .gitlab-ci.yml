@@ -1,0 +1,27 @@
+image: mcr.microsoft.com/dotnet/sdk:6.0
+
+stages:
+  - build
+  - test
+  - release
+
+build:
+  stage: build
+  script:
+    - dotnet cake -v diagnostic --target Build
+
+test:
+  stage: test
+  script:
+    - dotnet cake -v diagnostic --target Test
+
+release:
+  stage: release
+  only:
+    - master
+    - develop
+  artifacts:
+    paths:
+      - artifacts/
+  script:
+    - dotnet cake -v diagnostic --target Package
