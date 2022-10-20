@@ -81,6 +81,7 @@ Task("Semantic")
 });
 
 Task("Package")
+    .IsDependentOn("Semantic")
     .Does(() =>
 {
     var projects = GetFiles("./**/*.csproj");

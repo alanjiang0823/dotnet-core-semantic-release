@@ -1,4 +1,6 @@
 {
+  "noCi": true,
+  "dryRun": false,
   "branches": [
     "main",
     {
